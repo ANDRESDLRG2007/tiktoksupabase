@@ -1,111 +1,194 @@
 "use client";
-// 👆 Este componente se ejecuta del lado del cliente (navegador)
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-// 👆 Importamos React y el cliente de Supabase que configuramos en /lib
+import { useRouter } from "next/navigation";
+
 export default function RegisterPage() {
-  // 📦 Estados tipados con TypeScript
-  const [nombre, setNombre] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [telefono, setTelefono] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const router = useRouter();
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
-  // ⚙️ Esta función maneja el registro del usuario
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) { router.push("/user"); return; }
+      setLoading(false);
+    };
+    checkUser();
+  }, [router]);
+
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // 👈 Evita que el formulario recargue la página
-    // 🚀 1️⃣Registrar al usuario en el sistema de autenticación de Supabase
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-    // 🧩 Si hay error en la autenticación, detenemos el proceso
-    if (authError) {
-      setMessage("❌ Error en registro: " + authError.message);
-      return;
-    }
-    // ⚠️ Verificamos si Supabase devolvió un ID de usuario
+    e.preventDefault();
+    setSubmitting(true);
+    const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
+    if (authError) { setMessage("❌ " + authError.message); setSubmitting(false); return; }
     const userId = authData.user?.id;
-    if (!userId) {
-      setMessage("⚠️ No se pudo obtener el ID del usuario.");
-      return;
-    }
-    // 📘 2️⃣Insertar los datos del estudiante en la tabla 'estudiantes'
-    const { error: insertError } = await supabase.from("estudiantes").insert([
-      {
-        id: userId, // 🧩 Usamos el mismo ID del sistema de autenticación
-        nombre,
-        correo: email,
-        telefono,
-      },
-    ]);
-    // 🧩 Si hay error al insertar en la tabla
+    if (!userId) { setMessage("⚠️ No se pudo obtener el ID del usuario."); setSubmitting(false); return; }
+
+    const { error: insertError } = await supabase.from("usuarios").insert([{
+      id: userId,
+      nombre,
+      correo: email,
+    }]);
+
     if (insertError) {
-      setMessage(
-        "⚠️ Usuario autenticado pero no guardado en la tabla:" +
-          insertError.message,
-      );
-      return;
+      setMessage("✅ Cuenta creada. Confirma tu correo para continuar.");
+    } else {
+      setMessage("✅ ¡Cuenta creada! Revisa tu correo para confirmar.");
     }
-    // ✅ Si todo sale bien:
-    setMessage(
-      "✅ Usuario registrado y guardado correctamente. Revisa tu correo para confirmar.",
-    );
+    setSubmitting(false);
   };
+
+  if (loading) return null;
+
   return (
-    <div
-      className="max-w-sm mx-auto mt-10 p-6 border rounded-lg
-shadow"
-    >
-      <h1 className="text-xl font-bold mb-4 text-center">
-        Registro de estudiante
-      </h1>
-      {/* 📋 Al enviar el formulario se ejecuta handleRegister */}
-      <form onSubmit={handleRegister} className="flex flex-col gap-4">
-        {/* Campo para el nombre */}
-        <input
-          type="text"
-          placeholder="Nombre completo"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)} // 🔄 Actualiza el estado
-          required
-          className="border p-2 rounded"
-        />
-        {/* Campo para el correo */}
-        <input
-          type="email"
-          placeholder="Correo electrónico"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)} // 🔄 Actualiza el estado
-          required
-          className="border p-2 rounded"
-        />
-        {/* Campo para el teléfono */}
-        <input
-          type="tel"
-          placeholder="Teléfono"
-          value={telefono}
-          onChange={(e) => setTelefono(e.target.value)} // 🔄 Actualiza el estado
-          className="border p-2 rounded"
-        />
-        {/* Campo para la contraseña */}
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)} // 🔄 Actualiza el estado
-          required
-          className="border p-2 rounded"
-        />
-        <button
-          type="submit"
-          className="bg-blue-600 text-white p-2
-rounded"
-        >
-          Registrarse
-        </button>
-      </form>
-      {/* 💬 Mostramos el mensaje de éxito o error */}
-      {message && <p className="mt-4 text-center">{message}</p>}
+    <div style={{
+      minHeight: "100vh",
+      background: "#000",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: "'Helvetica Neue', Arial, sans-serif",
+      padding: "0 24px",
+    }}>
+      {/* Logo */}
+      <div style={{ marginBottom: "40px", textAlign: "center" }}>
+        <div style={{
+          fontSize: "48px",
+          fontWeight: 900,
+          letterSpacing: "-2px",
+          color: "#fff",
+          lineHeight: 1,
+        }}>
+          <span style={{ color: "#fe2c55" }}>Tik</span>
+          <span style={{ color: "#fff" }}>Tok</span>
+        </div>
+        <p style={{ color: "#aaa", fontSize: "14px", marginTop: "8px", letterSpacing: "0.5px" }}>
+          Crear cuenta
+        </p>
+      </div>
+
+      {/* Card */}
+      <div style={{
+        width: "100%",
+        maxWidth: "380px",
+        background: "#1a1a1a",
+        borderRadius: "16px",
+        padding: "32px 28px",
+        border: "1px solid #2a2a2a",
+      }}>
+        <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <input
+            type="text"
+            placeholder="Nombre de usuario"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            required
+            style={{
+              width: "100%",
+              background: "#2a2a2a",
+              border: "1px solid #3a3a3a",
+              borderRadius: "8px",
+              padding: "14px 16px",
+              color: "#fff",
+              fontSize: "15px",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+          <input
+            type="email"
+            placeholder="Correo electrónico"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={{
+              width: "100%",
+              background: "#2a2a2a",
+              border: "1px solid #3a3a3a",
+              borderRadius: "8px",
+              padding: "14px 16px",
+              color: "#fff",
+              fontSize: "15px",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={{
+              width: "100%",
+              background: "#2a2a2a",
+              border: "1px solid #3a3a3a",
+              borderRadius: "8px",
+              padding: "14px 16px",
+              color: "#fff",
+              fontSize: "15px",
+              outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+
+          <button
+            type="submit"
+            disabled={submitting}
+            style={{
+              width: "100%",
+              background: submitting ? "#555" : "#fe2c55",
+              border: "none",
+              borderRadius: "8px",
+              padding: "14px",
+              color: "#fff",
+              fontSize: "16px",
+              fontWeight: 700,
+              cursor: submitting ? "not-allowed" : "pointer",
+              marginTop: "8px",
+            }}
+          >
+            {submitting ? "Creando cuenta..." : "Registrarse"}
+          </button>
+        </form>
+
+        {message && (
+          <p style={{
+            color: message.startsWith("❌") ? "#fe2c55" : "#25f4ee",
+            textAlign: "center",
+            marginTop: "16px",
+            fontSize: "14px",
+          }}>
+            {message}
+          </p>
+        )}
+
+        <div style={{ marginTop: "24px", textAlign: "center" }}>
+          <p style={{ color: "#888", fontSize: "14px" }}>
+            ¿Ya tienes cuenta?{" "}
+            <button
+              onClick={() => router.push("/login")}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#fe2c55",
+                fontSize: "14px",
+                fontWeight: 700,
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              Inicia sesión
+            </button>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,33 +1,46 @@
 "use client";
-
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    const verificarSesion = async () => {
+    const checkUser = async () => {
       const { data } = await supabase.auth.getUser();
-
-      // ✅ Si hay usuario → MVP
       if (data.user) {
         router.push("/mvp");
       } else {
-        // ❌ Si no hay sesión → Login
         router.push("/login");
       }
     };
-
-    verificarSesion();
+    checkUser();
   }, [router]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <p className="text-xl font-bold">
-        ⏳ Cargando TikTok MVP...
-      </p>
+    <div style={{
+      minHeight: "100vh",
+      background: "#000",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+    }}>
+      <div style={{ textAlign: "center" }}>
+        <div style={{
+          fontSize: "52px",
+          fontWeight: 900,
+          letterSpacing: "-2px",
+          lineHeight: 1,
+          marginBottom: "16px",
+        }}>
+          <span style={{ color: "#fe2c55" }}>Tik</span>
+          <span style={{ color: "#fff" }}>Tok</span>
+        </div>
+        <p style={{ color: "#555", fontSize: "14px", fontFamily: "sans-serif" }}>
+          Cargando...
+        </p>
+      </div>
     </div>
   );
 }

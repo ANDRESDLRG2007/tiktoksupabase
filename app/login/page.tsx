@@ -1,70 +1,168 @@
 "use client";
-// 👆 Este componente se ejecuta del lado del cliente (navegador)
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-// 👆 Importamos React y el cliente de Supabase que configuramos en /lib
+import { useRouter } from "next/navigation";
+
 export default function LoginPage() {
-  // 📦 Estados tipados con TypeScript
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
-  // ⚙️ Esta función se ejecuta cuando el usuario envía el formulario de login
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) { router.push("/user"); return; }
+      setLoading(false);
+    };
+    checkUser();
+  }, [router]);
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // 👈 Evita que el formulario recargue la página
-    // 🚀 1️⃣Autenticar usuario con Supabase (email y contraseña)
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    // 🧩 Si hay error en la autenticación, mostramos el mensaje
-    if (error) {
-      setMessage("❌ Error al iniciar sesión: " + error.message);
-      return;
-    }
-    // ✅ Si el login es exitoso, guardamos el usuario en sesión
-    if (data.user) {
-      //data.user es parte de supabase
-      setMessage("✅ Bienvenido, sesión iniciada correctamente.");
-    } else {
-      setMessage("⚠️ No se encontró el usuario. Intenta de nuevo.");
-    }
+    e.preventDefault();
+    setSubmitting(true);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) { setMessage("❌ " + error.message); setSubmitting(false); return; }
+    if (data.user) router.push("/mvp");
   };
+
+  if (loading) return null;
+
   return (
-    <div
-      className="max-w-sm mx-auto mt-10 p-6 border rounded-lg
-shadow"
-    >
-      <h1 className="text-xl font-bold mb-4 text-center">Inicio de sesión</h1>
-      {/* 📋 Al enviar el formulario se ejecuta handleLogin */}
-      <form onSubmit={handleLogin} className="flex flex-col gap-4">
-        {/* Campo para el correo */}
-        <input
-          type="email"
-          placeholder="Correo electrónico"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)} // 🔄 Actualiza el estado
-          required
-          className="border p-2 rounded"
-        />
-        {/* Campo para la contraseña */}
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)} // 🔄 Actualiza el estado
-          required
-          className="border p-2 rounded"
-        />
-        <button
-          type="submit"
-          className="bg-green-600 text-white p-2
-rounded"
-        >
+    <div style={{
+      minHeight: "100vh",
+      background: "#000",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: "'Helvetica Neue', Arial, sans-serif",
+      padding: "0 24px",
+    }}>
+      {/* Logo */}
+      <div style={{ marginBottom: "40px", textAlign: "center" }}>
+        <div style={{
+          fontSize: "48px",
+          fontWeight: 900,
+          letterSpacing: "-2px",
+          color: "#fff",
+          lineHeight: 1,
+        }}>
+          <span style={{ color: "#fe2c55" }}>Tik</span>
+          <span style={{ color: "#fff" }}>Tok</span>
+        </div>
+        <p style={{ color: "#aaa", fontSize: "14px", marginTop: "8px", letterSpacing: "0.5px" }}>
           Iniciar sesión
-        </button>
-      </form>
-      {/* 💬 Mostramos mensajes de éxito o error */}
-      {message && <p className="mt-4 text-center">{message}</p>}
+        </p>
+      </div>
+
+      {/* Card */}
+      <div style={{
+        width: "100%",
+        maxWidth: "380px",
+        background: "#1a1a1a",
+        borderRadius: "16px",
+        padding: "32px 28px",
+        border: "1px solid #2a2a2a",
+      }}>
+        <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div>
+            <input
+              type="email"
+              placeholder="Correo electrónico"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={{
+                width: "100%",
+                background: "#2a2a2a",
+                border: "1px solid #3a3a3a",
+                borderRadius: "8px",
+                padding: "14px 16px",
+                color: "#fff",
+                fontSize: "15px",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+          <div>
+            <input
+              type="password"
+              placeholder="Contraseña"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{
+                width: "100%",
+                background: "#2a2a2a",
+                border: "1px solid #3a3a3a",
+                borderRadius: "8px",
+                padding: "14px 16px",
+                color: "#fff",
+                fontSize: "15px",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            style={{
+              width: "100%",
+              background: submitting ? "#555" : "#fe2c55",
+              border: "none",
+              borderRadius: "8px",
+              padding: "14px",
+              color: "#fff",
+              fontSize: "16px",
+              fontWeight: 700,
+              cursor: submitting ? "not-allowed" : "pointer",
+              marginTop: "8px",
+              letterSpacing: "0.3px",
+            }}
+          >
+            {submitting ? "Iniciando..." : "Iniciar sesión"}
+          </button>
+        </form>
+
+        {message && (
+          <p style={{ color: "#fe2c55", textAlign: "center", marginTop: "16px", fontSize: "14px" }}>
+            {message}
+          </p>
+        )}
+
+        <div style={{ marginTop: "24px", textAlign: "center" }}>
+          <p style={{ color: "#888", fontSize: "14px" }}>
+            ¿No tienes cuenta?{" "}
+            <button
+              onClick={() => router.push("/register")}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#fe2c55",
+                fontSize: "14px",
+                fontWeight: 700,
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              Regístrate
+            </button>
+          </p>
+        </div>
+      </div>
+
+      {/* Bottom divider */}
+      <div style={{ marginTop: "40px", textAlign: "center" }}>
+        <p style={{ color: "#555", fontSize: "12px" }}>
+          © 2025 TikTok MVP
+        </p>
+      </div>
     </div>
   );
 }
