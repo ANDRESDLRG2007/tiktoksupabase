@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter, usePathname } from "next/navigation";
 
-const ADMINS = ["cristianandres062013@gmail.com", "cristian.rueg@uniagustiniana.edu.co"]; // ← pon tus correos admin
+const ADMINS = ["cristianandres062013@gmail.com", "cristian.rueg@uniagustiniana.edu.co"];
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -14,10 +14,25 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 export default function RootLayout({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [tema, setTema] = useState<'dark' | 'light'>('dark');
   const router = useRouter();
   const pathname = usePathname();
 
   const sinNav = pathname === "/login" || pathname === "/register";
+
+  const toggleTema = () => {
+    const nuevo = tema === 'dark' ? 'light' : 'dark';
+    setTema(nuevo);
+    document.documentElement.setAttribute('data-theme', nuevo);
+    document.body.style.background = nuevo === 'dark' ? '#0a0a0a' : '#ffffff';
+    document.body.style.color = nuevo === 'dark' ? '#ededed' : '#171717';
+  };
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.body.style.background = '#0a0a0a';
+    document.body.style.color = '#ededed';
+  }, []);
 
   useEffect(() => {
     const getUser = async () => {
@@ -41,19 +56,40 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="es">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        style={{ margin: 0, padding: 0, background: "#000" }}
+        style={{ margin: 0, padding: 0, background: "var(--background)" }}
       >
         <main style={{ paddingBottom: user && !sinNav ? "70px" : "0" }}>
           {children}
         </main>
 
+        <button
+          onClick={toggleTema}
+          style={{
+            position: "fixed",
+            bottom: user && !sinNav ? "80px" : "16px",
+            right: "16px",
+            zIndex: 200,
+            background: tema === 'dark' ? '#fff' : '#222',
+            color: tema === 'dark' ? '#000' : '#fff',
+            border: "none",
+            borderRadius: "20px",
+            padding: "6px 14px",
+            fontSize: "12px",
+            cursor: "pointer",
+            fontWeight: 600,
+            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+          }}
+        >
+          {tema === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+        </button>
+
         {user && !sinNav && (
           <nav style={{
             position: "fixed",
             bottom: 0, left: 0, right: 0,
-            background: "rgba(0,0,0,0.97)",
+            background: "var(--nav-bg)",
             backdropFilter: "blur(10px)",
-            borderTop: "1px solid #1a1a1a",
+            borderTop: "1px solid var(--nav-border)",
             display: "flex",
             zIndex: 100,
           }}>
@@ -116,8 +152,8 @@ function NavBtn({
         fontSize: "10px",
         fontWeight: activo ? 700 : 400,
         color: activo
-          ? (esAdmin ? "#fe2c55" : "#fff")
-          : (esAdmin ? "#fe2c5566" : "#666"),
+          ? (esAdmin ? "#fe2c55" : "var(--nav-label-active)")
+          : (esAdmin ? "#fe2c5566" : "var(--nav-label-inactive)"),
         letterSpacing: "0.3px",
       }}>
         {label}
