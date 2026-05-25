@@ -46,7 +46,7 @@ export default function AdminPage() {
   useEffect(() => {
     const verificar = async () => {
       const { data } = await supabase.auth.getUser();
-      const ADMINS = ["cristian.rueg@uniagustiniana.edu.co", "cristianandres062013@gmail.com"];
+      const ADMINS = ["cristian.rueg@uniagustiniana.edu.co", "cristianandres062013@gmail.com","ivan.sterlingp@uniagustiniana.edu.co"];
       if (!data.user || !ADMINS.includes(data.user.email ?? "")) {
         router.push("/login");
         return;

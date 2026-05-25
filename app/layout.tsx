@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter, usePathname } from "next/navigation";
 
-const ADMINS = ["cristianandres062013@gmail.com", "cristian.rueg@uniagustiniana.edu.co"]; // ← pon tus correos admin
+const ADMINS = ["cristianandres062013@gmail.com", "cristian.rueg@uniagustiniana.edu.co","ivan.sterlingp@uniagustiniana.edu.co"]; // ← pon tus correos admin
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
