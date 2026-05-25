@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
-const ADMIN_EMAIL = "TU_CORREO_ADMIN@aqui.com"; // ← CAMBIA ESTO
+const ADMIN_EMAIL = "cristianandres062013@gmail.com"; // ← CAMBIA ESTO
 
 interface Video {
   id: string;

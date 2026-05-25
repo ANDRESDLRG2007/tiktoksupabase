@@ -198,6 +198,8 @@ export default function UserPage() {
               <div key={v.id} style={{ position: "relative", aspectRatio: "9/16", background: "#111", overflow: "hidden" }}>
                 {v.url_miniatura ? (
                   <img src={v.url_miniatura} alt={v.titulo} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : v.url_video.toLowerCase().endsWith(".gif") ? (
+                  <img src={v.url_video} alt={v.titulo} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
                   <video src={v.url_video} style={{ width: "100%", height: "100%", objectFit: "cover" }} muted />
                 )}
@@ -245,7 +247,11 @@ export default function UserPage() {
             padding: "12px 0", borderBottom: "1px solid #1a1a1a",
           }}>
             <div style={{ width: "48px", height: "64px", background: "#1a1a1a", borderRadius: "6px", overflow: "hidden", flexShrink: 0 }}>
-              {v.url_miniatura && <img src={v.url_miniatura} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+              {v.url_miniatura ? (
+                <img src={v.url_miniatura} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : v.url_video.toLowerCase().endsWith(".gif") ? (
+                <img src={v.url_video} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : null}
             </div>
             <p style={{ color: "#ccc", fontSize: "13px", flex: 1, margin: 0 }}>{v.titulo}</p>
             <button

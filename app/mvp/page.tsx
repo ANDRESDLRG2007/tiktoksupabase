@@ -219,7 +219,7 @@ export default function MVPPage() {
           <h3 style={{ color: "#fff", fontSize: "16px", fontWeight: 700, marginBottom: "16px" }}>Subir video</h3>
           <form onSubmit={subirVideo} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             <input type="text" placeholder="Título del video" value={tituloVideo} onChange={(e) => setTituloVideo(e.target.value)} required style={inputStyle} />
-            <input type="text" placeholder="URL del video (.mp4)" value={urlVideo} onChange={(e) => setUrlVideo(e.target.value)} required style={inputStyle} />
+            <input type="text" placeholder="URL del video (.mp4) o GIF (.gif)" value={urlVideo} onChange={(e) => setUrlVideo(e.target.value)} required style={inputStyle} />
             <input type="text" placeholder="URL miniatura (opcional)" value={urlMiniatura} onChange={(e) => setUrlMiniatura(e.target.value)} style={inputStyle} />
             <button type="submit" style={{ background: "#fe2c55", border: "none", borderRadius: "8px", padding: "12px", color: "#fff", fontWeight: 700, fontSize: "15px", cursor: "pointer" }}>
               Publicar
@@ -261,13 +261,21 @@ export default function MVPPage() {
               </div>
             </div>
 
-            {/* Video */}
-            <video
-              src={video.url_video}
-              controls
-              poster={video.url_miniatura}
-              style={{ width: "100%", maxHeight: "520px", background: "#111", display: "block" }}
-            />
+            {/* Video o GIF */}
+            {video.url_video.toLowerCase().endsWith(".gif") ? (
+              <img
+                src={video.url_video}
+                alt={video.titulo}
+                style={{ width: "100%", maxHeight: "520px", background: "#111", display: "block", objectFit: "contain" }}
+              />
+            ) : (
+              <video
+                src={video.url_video}
+                controls
+                poster={video.url_miniatura}
+                style={{ width: "100%", maxHeight: "520px", background: "#111", display: "block" }}
+              />
+            )}
 
             {/* Acciones */}
             <div style={{ display: "flex", alignItems: "center", gap: "24px", padding: "12px 16px" }}>

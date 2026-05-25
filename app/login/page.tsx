@@ -14,7 +14,7 @@ export default function LoginPage() {
   useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser();
-      if (data.user) { router.push("/user"); return; }
+      if (data.user) { router.push("/mvp"); return; }
       setLoading(false);
     };
     checkUser();
@@ -23,9 +23,37 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
+    setMessage(null);
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) { setMessage("❌ " + error.message); setSubmitting(false); return; }
-    if (data.user) router.push("/mvp");
+
+    if (error) {
+      setMessage("❌ " + error.message);
+      setSubmitting(false);
+      return;
+    }
+
+    if (data.user) {
+      // Verificar si existe en tabla usuarios, si no, crearlo
+      const { data: existeUsuario } = await supabase
+        .from("usuarios")
+        .select("id")
+        .eq("id", data.user.id)
+        .maybeSingle();
+
+      if (!existeUsuario) {
+        // Recuperar nombre de los metadatos si se guardó en el registro
+        const nombreMeta = data.user.user_metadata?.nombre;
+        const nombreFallback = email.split("@")[0];
+        await supabase.from("usuarios").upsert([{
+          id: data.user.id,
+          nombre: nombreMeta ?? nombreFallback,
+          correo: email,
+        }], { onConflict: "id" });
+      }
+
+      router.push("/mvp");
+    }
   };
 
   if (loading) return null;
@@ -41,89 +69,52 @@ export default function LoginPage() {
       fontFamily: "'Helvetica Neue', Arial, sans-serif",
       padding: "0 24px",
     }}>
-      {/* Logo */}
       <div style={{ marginBottom: "40px", textAlign: "center" }}>
-        <div style={{
-          fontSize: "48px",
-          fontWeight: 900,
-          letterSpacing: "-2px",
-          color: "#fff",
-          lineHeight: 1,
-        }}>
+        <div style={{ fontSize: "48px", fontWeight: 900, letterSpacing: "-2px", lineHeight: 1 }}>
           <span style={{ color: "#fe2c55" }}>Tik</span>
           <span style={{ color: "#fff" }}>Tok</span>
         </div>
-        <p style={{ color: "#aaa", fontSize: "14px", marginTop: "8px", letterSpacing: "0.5px" }}>
-          Iniciar sesión
-        </p>
+        <p style={{ color: "#aaa", fontSize: "14px", marginTop: "8px" }}>Iniciar sesión</p>
       </div>
 
-      {/* Card */}
       <div style={{
-        width: "100%",
-        maxWidth: "380px",
-        background: "#1a1a1a",
-        borderRadius: "16px",
-        padding: "32px 28px",
-        border: "1px solid #2a2a2a",
+        width: "100%", maxWidth: "380px",
+        background: "#1a1a1a", borderRadius: "16px",
+        padding: "32px 28px", border: "1px solid #2a2a2a",
       }}>
         <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <div>
-            <input
-              type="email"
-              placeholder="Correo electrónico"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={{
-                width: "100%",
-                background: "#2a2a2a",
-                border: "1px solid #3a3a3a",
-                borderRadius: "8px",
-                padding: "14px 16px",
-                color: "#fff",
-                fontSize: "15px",
-                outline: "none",
-                boxSizing: "border-box",
-              }}
-            />
-          </div>
-          <div>
-            <input
-              type="password"
-              placeholder="Contraseña"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{
-                width: "100%",
-                background: "#2a2a2a",
-                border: "1px solid #3a3a3a",
-                borderRadius: "8px",
-                padding: "14px 16px",
-                color: "#fff",
-                fontSize: "15px",
-                outline: "none",
-                boxSizing: "border-box",
-              }}
-            />
-          </div>
-
+          <input
+            type="email"
+            placeholder="Correo electrónico"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={{
+              width: "100%", background: "#2a2a2a", border: "1px solid #3a3a3a",
+              borderRadius: "8px", padding: "14px 16px", color: "#fff",
+              fontSize: "15px", outline: "none", boxSizing: "border-box",
+            }}
+          />
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={{
+              width: "100%", background: "#2a2a2a", border: "1px solid #3a3a3a",
+              borderRadius: "8px", padding: "14px 16px", color: "#fff",
+              fontSize: "15px", outline: "none", boxSizing: "border-box",
+            }}
+          />
           <button
             type="submit"
             disabled={submitting}
             style={{
-              width: "100%",
-              background: submitting ? "#555" : "#fe2c55",
-              border: "none",
-              borderRadius: "8px",
-              padding: "14px",
-              color: "#fff",
-              fontSize: "16px",
-              fontWeight: 700,
-              cursor: submitting ? "not-allowed" : "pointer",
-              marginTop: "8px",
-              letterSpacing: "0.3px",
+              width: "100%", background: submitting ? "#555" : "#fe2c55",
+              border: "none", borderRadius: "8px", padding: "14px",
+              color: "#fff", fontSize: "16px", fontWeight: 700,
+              cursor: submitting ? "not-allowed" : "pointer", marginTop: "8px",
             }}
           >
             {submitting ? "Iniciando..." : "Iniciar sesión"}
@@ -141,15 +132,7 @@ export default function LoginPage() {
             ¿No tienes cuenta?{" "}
             <button
               onClick={() => router.push("/register")}
-              style={{
-                background: "none",
-                border: "none",
-                color: "#fe2c55",
-                fontSize: "14px",
-                fontWeight: 700,
-                cursor: "pointer",
-                padding: 0,
-              }}
+              style={{ background: "none", border: "none", color: "#fe2c55", fontSize: "14px", fontWeight: 700, cursor: "pointer", padding: 0 }}
             >
               Regístrate
             </button>
@@ -157,12 +140,7 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Bottom divider */}
-      <div style={{ marginTop: "40px", textAlign: "center" }}>
-        <p style={{ color: "#555", fontSize: "12px" }}>
-          © 2025 TikTok MVP
-        </p>
-      </div>
+      <p style={{ color: "#555", fontSize: "12px", marginTop: "40px" }}>© 2025 TikTok MVP</p>
     </div>
   );
 }
